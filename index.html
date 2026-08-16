@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The 3D Wonder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141417; --surface:#1c1c21; --surface-2:#232329;
+    --orange:#ff6a39; --teal:#00c2a8; --ink:#f4f3ee; --muted:#93939c; --line:#33333b;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{ background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans', sans-serif; line-height:1.5; overflow-x:hidden; }
+  html[dir="rtl"] body{ font-family:'IBM Plex Sans Arabic', sans-serif; }
+  h1,h2,h3, .wordmark, .btn, .nav-link{ font-family:'Cairo', sans-serif; }
+  .mono{ font-family:'Space Mono', monospace; }
+  .layered{
+    background-image: repeating-linear-gradient(to bottom, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 7px);
+  }
+  a{ color:inherit; text-decoration:none; }
+  img,svg{ display:block; max-width:100%; }
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+
+  header{ position:sticky; top:0; z-index:50; background:rgba(20,20,23,0.9); backdrop-filter: blur(10px); border-bottom:1px solid var(--line); }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:16px 24px; max-width:1120px; margin:0 auto; gap:12px; flex-wrap:wrap; }
+  .wordmark{ font-weight:900; font-size:20px; display:flex; align-items:center; gap:8px; }
+  .wordmark .dot{ width:9px; height:9px; border-radius:2px; background:var(--orange); transform: rotate(45deg); flex:none; }
+  .nav-right{ display:flex; align-items:center; gap:10px; }
+  .lang-toggle{ display:flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; font-family:'Space Mono', monospace; font-size:12px; }
+  .lang-toggle button{ background:transparent; border:none; color:var(--muted); padding:8px 14px; cursor:pointer; font-family:inherit; font-size:12px; }
+  .lang-toggle button.active{ background:var(--orange); color:#141417; font-weight:700; }
+  .edit-toggle{
+    border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    padding:8px 16px; border-radius:999px; font-family:'Space Mono', monospace;
+    font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .edit-toggle.active{ background:var(--teal); color:#141417; border-color:var(--teal); font-weight:700; }
+  .cart-count{ background:var(--orange); color:#141417; font-weight:800; border-radius:999px; padding:1px 7px; font-size:11px; }
+
+  .cart-item{ display:flex; gap:12px; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+  .cart-item img, .cart-item .cart-thumb{ width:52px; height:52px; border-radius:8px; object-fit:cover; background:var(--surface-2); flex:none; }
+  .cart-item .ci-info{ flex:1; min-width:0; }
+  .cart-item .ci-name{ font-weight:700; font-size:14px; margin-bottom:4px; }
+  .cart-item .ci-price{ font-family:'Space Mono', monospace; font-size:12px; color:var(--muted); }
+  .qty-stepper{ display:flex; align-items:center; gap:8px; }
+  .qty-stepper button{ width:26px; height:26px; border-radius:6px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); cursor:pointer; font-size:14px; }
+  .qty-stepper span{ font-family:'Space Mono', monospace; font-size:13px; min-width:16px; text-align:center; }
+  .ci-remove{ background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:4px; }
+  .ci-remove:hover{ color:#ff6666; }
+  .cart-total-row{ display:flex; justify-content:space-between; align-items:center; padding:16px 0 4px; font-weight:800; font-size:16px; }
+  .cart-empty{ color:var(--muted); font-size:13px; text-align:center; padding:30px 0; }
+  .modal.wide{ max-width:440px; max-height:82vh; overflow-y:auto; }
+  .checkout-summary{ background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:13px; color:var(--muted); }
+  .admin-qr{ text-align:center; background:#fff; padding:12px; border-radius:10px; margin:14px 0; }
+  .admin-qr img{ margin:0 auto; }
+  .admin-secret{ font-family:'Space Mono', monospace; font-size:12px; text-align:center; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:14px; word-break:break-all; letter-spacing:1px; }
+  .admin-note{ font-size:12px; color:var(--muted); margin-bottom:14px; line-height:1.6; }
+  .checkout-summary .line{ display:flex; justify-content:space-between; padding:3px 0; }
+  .checkout-summary .grand{ color:var(--ink); font-weight:700; border-top:1px solid var(--line); margin-top:6px; padding-top:8px; }
+
+  .hero{ padding:90px 24px 70px; border-bottom:1px solid var(--line); }
+  .hero-inner{ max-width:1120px; margin:0 auto; display:grid; grid-template-columns:1.1fr 0.9fr; gap:56px; align-items:center; }
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-family:'Space Mono', monospace; font-size:12px; color:var(--teal); text-transform:uppercase; margin-bottom:20px; }
+  .eyebrow::before{ content:''; width:16px; height:1px; background:var(--teal); }
+  h1.headline{ font-size:clamp(36px, 5.2vw, 60px); font-weight:900; line-height:1.05; letter-spacing:-0.5px; margin-bottom:22px; }
+  h1.headline .accent{ color:var(--orange); }
+  .sub{ color:var(--muted); font-size:17px; max-width:440px; margin-bottom:32px; }
+  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; }
+  .btn{ padding:14px 26px; border-radius:10px; font-weight:700; font-size:14px; cursor:pointer; border:1px solid transparent; transition:transform .15s ease; display:inline-flex; align-items:center; gap:8px; }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn-primary{ background:var(--orange); color:#141417; }
+  .btn-secondary{ background:transparent; border-color:var(--line); color:var(--ink); }
+
+  .print-visual{ aspect-ratio:1/1; background:var(--surface); border:1px solid var(--line); border-radius:18px; position:relative; overflow:hidden; }
+  .print-visual .bed{ position:absolute; inset:0; background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size:24px 24px; }
+  .print-visual .shape{ position:absolute; left:50%; bottom:16%; transform:translateX(-50%); width:120px; height:120px; }
+  .print-visual .shape .facet{ position:absolute; border-radius:6px; }
+  .print-visual .nozzle{ position:absolute; left:50%; width:2px; background:var(--muted); top:10%; height:0%; transform:translateX(-50%); animation: nozzleDrop 3.2s ease-in-out infinite; }
+  .print-visual .nozzle::after{ content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:22px; height:14px; background:var(--orange); border-radius:3px 3px 8px 8px; }
+  @keyframes nozzleDrop{ 0%{height:0%;} 45%{height:66%;} 55%{height:66%;} 100%{height:0%;} }
+  .print-visual .caption{ position:absolute; bottom:14px; left:14px; right:14px; font-family:'Space Mono', monospace; font-size:11px; color:var(--muted); display:flex; justify-content:space-between; }
+
+  section{ padding:80px 0; border-bottom:1px solid var(--line); }
+  .section-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:44px; gap:24px; flex-wrap:wrap; }
+  .section-head h2{ font-size:clamp(26px,3.2vw,36px); font-weight:800; }
+  .section-head p{ color:var(--muted); max-width:420px; font-size:15px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; }
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; opacity:0; transform:translateY(18px); transition:opacity .5s ease, transform .5s ease; position:relative; }
+  .card.in{ opacity:1; transform:translateY(0); }
+  .card-art{ height:230px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--surface-2); }
+  .card-art img{ width:100%; height:100%; object-fit:cover; }
+  .card-art .poly{ width:70px; height:70px; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+  .card-body{ padding:18px 18px 20px; border-top:1px solid var(--line); }
+  .card-tag{ font-family:'Space Mono', monospace; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; display:block; }
+  .card-title{ font-weight:700; font-size:15px; margin-bottom:10px; }
+  .card-row{ display:flex; align-items:center; justify-content:space-between; }
+  .card-price{ font-family:'Space Mono', monospace; font-weight:700; color:var(--orange); font-size:14px; }
+  .card-order{ margin-top:14px; display:block; width:100%; text-align:center; padding:9px; border-radius:8px; background:var(--surface-2); border:1px solid var(--line); font-size:12px; font-weight:600; font-family:inherit; color:var(--ink); cursor:pointer; }
+  .card-order:hover{ border-color:var(--teal); color:var(--teal); }
+  .card-edit-controls{ position:absolute; top:10px; inset-inline-end:10px; display:none; gap:8px; z-index:5; }
+  .card.editing .card-edit-controls{ display:flex; }
+  .card.editing{ outline:2px dashed var(--teal); outline-offset:-2px; }
+  .icon-btn{ width:36px; height:36px; border-radius:8px; border:1px solid var(--line); background:#141417; color:var(--ink); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.5); }
+  .icon-btn:hover{ border-color:var(--orange); color:var(--orange); }
+  .icon-btn.danger{ color:#ff8080; }
+  .icon-btn.danger:hover{ border-color:#ff4d4d; color:#ff4d4d; }
+  .edit-banner{ display:none; align-items:center; gap:8px; background:rgba(0,194,168,0.12); border:1px solid var(--teal); color:var(--teal); font-size:13px; padding:10px 16px; border-radius:10px; margin-bottom:22px; font-family:'Space Mono', monospace; }
+  .edit-banner.show{ display:flex; }
+
+  .add-card{ border:1px dashed var(--line); border-radius:14px; display:none; align-items:center; justify-content:center; min-height:230px; cursor:pointer; color:var(--muted); font-size:13px; flex-direction:column; gap:8px; background:transparent; }
+  .add-card.show{ display:flex; }
+  .add-card:hover{ border-color:var(--teal); color:var(--teal); }
+  .add-card .plus{ font-size:26px; font-family:'Space Mono', monospace; }
+
+  .process{ display:grid; grid-template-columns:repeat(3,1fr); gap:28px; }
+  .step{ position:relative; padding-top:26px; border-top:2px solid var(--orange); }
+  .step-num{ font-family:'Space Mono', monospace; color:var(--orange); font-size:12px; margin-bottom:10px; display:block; }
+  .step h3{ font-size:18px; margin-bottom:8px; }
+  .step p{ color:var(--muted); font-size:14px; }
+
+  footer{ padding:50px 0 40px; }
+  .footer-inner{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:30px; }
+  .foot-col h4{ font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:12px; font-family:'Space Mono', monospace; }
+  .foot-col a, .foot-col p{ display:block; color:var(--ink); font-size:14px; margin-bottom:8px; }
+  .bottom-line{ margin-top:40px; padding-top:20px; border-top:1px solid var(--line); font-size:12px; color:var(--muted); text-align:center; font-family:'Space Mono', monospace; }
+
+  /* modal */
+  .overlay{ position:fixed; inset:0; background:rgba(10,10,12,0.7); backdrop-filter:blur(4px); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; }
+  .overlay.show{ display:flex; }
+  .modal{ background:var(--surface); border:1px solid var(--line); border-radius:16px; max-width:420px; width:100%; padding:28px; max-height:85vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .modal h3{ font-size:18px; margin-bottom:18px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-family:'Space Mono', monospace; }
+  .field input, .field select{
+    width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; color:var(--ink); font-size:14px; font-family:inherit;
+  }
+  .field input:focus, .field select:focus{ outline:none; border-color:var(--teal); }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; position:sticky; bottom:-28px; background:var(--surface); padding:14px 0 4px; margin-bottom:-4px; }
+  .modal-actions .btn{ flex:1; justify-content:center; padding:11px; }
+  .swatches{ display:flex; gap:8px; margin-top:4px; }
+  .image-upload{ border:1px dashed var(--line); border-radius:10px; padding:14px; text-align:center; cursor:pointer; position:relative; }
+  .image-upload:hover{ border-color:var(--teal); }
+  .image-upload input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+  .image-upload .hint{ color:var(--muted); font-size:12px; font-family:'Space Mono', monospace; }
+  .image-preview{ display:none; margin-top:10px; position:relative; overflow:hidden; border-radius:8px; }
+  .image-preview.show{ display:block; }
+  .image-preview img{ width:100%; height:190px; object-fit:cover; border-radius:8px; border:1px solid var(--line); }
+  .image-preview .remove-img{ position:absolute; top:6px; right:6px; width:26px; height:26px; border-radius:6px; border:1px solid var(--line); background:#141417; color:var(--ink); cursor:pointer; font-size:13px; }
+  .crop-controls{ display:none; margin-top:12px; }
+  .crop-controls.show{ display:block; }
+  .crop-controls label{ display:block; font-size:11px; color:var(--muted); margin:8px 0 4px; font-family:'Space Mono', monospace; }
+  .crop-controls input[type=range]{ width:100%; accent-color:var(--orange); }
+  .swatch{ width:28px; height:28px; border-radius:7px; cursor:pointer; border:2px solid transparent; }
+  .swatch.selected{ border-color:var(--ink); }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--teal); color:#141417; padding:12px 22px; border-radius:999px; font-weight:700; font-size:13px; opacity:0; transition:all .3s ease; z-index:200; pointer-events:none; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width: 860px){
+    .hero-inner{ grid-template-columns:1fr; }
+    .grid{ grid-template-columns:repeat(2,1fr); }
+    .process{ grid-template-columns:1fr; }
+    .print-visual{ max-width:340px; margin:0 auto; }
+  }
+  @media (max-width: 540px){
+    .grid{ grid-template-columns:1fr; }
+    nav{ padding:14px 18px; }
+    .hero{ padding:64px 18px 50px; }
+  }
+  @media (prefers-reduced-motion: reduce){ .nozzle{ animation:none !important; } .card{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="wordmark"><span class="dot"></span><span data-en="The 3D Wonder" data-ar="ذا ثري دي واندر">The 3D Wonder</span></div>
+    <div class="nav-right">
+      <button class="edit-toggle" id="cartBtn" onclick="openCart()">
+        <span>🛒</span><span data-en="Cart" data-ar="السلة">Cart</span>
+        <span id="cartCount" class="cart-count">0</span>
+      </button>
+      <button class="edit-toggle" id="editToggle" onclick="toggleEdit()" style="display:none;">
+        <span data-en="✎ Edit site" data-ar="✎ تعديل الموقع">✎ Edit site</span>
+      </button>
+      <div class="lang-toggle">
+        <button id="btn-en" class="active" onclick="setLang('en')">EN</button>
+        <button id="btn-ar" onclick="setLang('ar')">AR</button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow" data-en="Printed fresh in Cairo" data-ar="بتتطبع في القاهرة">Printed fresh in Cairo</div>
+      <h1 class="headline">
+        <span data-en='Trending finds,' data-ar='أشكال ترند،'>Trending finds,</span>
+        <span class="accent" data-en="printed to order." data-ar="بتتطبع خصيصًا ليك.">printed to order.</span>
+      </h1>
+      <p class="sub" data-en="Viral 3D-printed pieces made one layer at a time — from desk toys to personalized dive-boat gifts. We deliver all over Egypt."
+                     data-ar="قطع ثري دي فايرال بتتطبع طبقة ورا طبقة — من ألعاب المكتب لهدايا رحلات الغوص الشخصية. بنوصل لكل مصر.">
+        Viral 3D-printed pieces made one layer at a time — from desk toys to personalized dive-boat gifts. We deliver all over Egypt.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" id="tiktokBtnHero" href="#" target="_blank" rel="noopener" data-en="Order on TikTok" data-ar="اطلب من تيك توك">Order on TikTok</a>
+        <a class="btn btn-secondary" id="whatsappBtnHero" href="#" target="_blank" rel="noopener" data-en="Chat on WhatsApp" data-ar="كلمنا واتساب">Chat on WhatsApp</a>
+      </div>
+    </div>
+    <div class="print-visual layered">
+      <div class="bed"></div>
+      <div class="shape">
+        <div class="facet" style="width:120px;height:60px;bottom:0;left:0;background:#2a2a31;border:1px solid var(--line);"></div>
+        <div class="facet" style="width:90px;height:50px;bottom:20px;left:15px;background:var(--teal); opacity:.85;"></div>
+        <div class="facet" style="width:60px;height:60px;bottom:44px;left:30px;background:var(--orange); border-radius:50%;"></div>
+      </div>
+      <div class="nozzle"></div>
+      <div class="caption">
+        <span data-en="layer 214 / 320" data-ar="طبقة ٢١٤ / ٣٢٠">layer 214 / 320</span>
+        <span data-en="PLA · 0.2mm" data-ar="PLA · ٠.٢ مم">PLA · 0.2mm</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="trending">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 data-en="Trending prints" data-ar="الأكثر رواجًا">Trending prints</h2>
+      <p data-en="This week's picks — small batches, updated as new designs trend." data-ar="اختيارات الأسبوع ده — كميات محدودة، بتتحدث كل ما يظهر تصميم جديد ترند.">This week's picks — small batches, updated as new designs trend.</p>
+    </div>
+    <div class="edit-banner" id="banner-trending">
+      <span data-en="✎ Edit mode on — tap the pencil to edit or ✕ to delete any card" data-ar="✎ وضع التعديل شغال — دوس على القلم عشان تعدل أو ✕ عشان تمسح أي كارت">Edit mode on</span>
+    </div>
+    <div class="grid" id="grid-trending"></div>
+  </div>
+</section>
+
+<section id="dive">
+  <div class="wrap">
+    <div class="section-head">
+      <h2 data-en="Dive safari gifts" data-ar="هدايا رحلات الغوص">Dive safari gifts</h2>
+      <p data-en="Personalized keepsakes for Red Sea dive-boat trips — printed with names and dates." data-ar="هدايا شخصية لرحلات الغوص في البحر الأحمر — بتتطبع بالاسم والتاريخ.">Personalized keepsakes for Red Sea dive-boat trips — printed with names and dates.</p>
+    </div>
+    <div class="edit-banner" id="banner-dive">
+      <span data-en="✎ Edit mode on — tap the pencil to edit or ✕ to delete any card" data-ar="✎ وضع التعديل شغال — دوس على القلم عشان تعدل أو ✕ عشان تمسح أي كارت">Edit mode on</span>
+    </div>
+    <div class="grid" id="grid-dive"></div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head"><h2 data-en="How it works" data-ar="ازاي بتطلب">How it works</h2></div>
+    <div class="process">
+      <div class="step">
+        <span class="step-num">01</span>
+        <h3 data-en="Pick your piece" data-ar="اختار قطعتك">Pick your piece</h3>
+        <p data-en="Browse trending prints or ask for a custom design." data-ar="تصفح الأشكال الترند أو اطلب تصميم مخصوص.">Browse trending prints or ask for a custom design.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">02</span>
+        <h3 data-en="Send us the details" data-ar="ابعتلنا التفاصيل">Send us the details</h3>
+        <p data-en="Color, size, name or date for personalized pieces." data-ar="اللون والمقاس والاسم أو التاريخ لو القطعة شخصية.">Color, size, name or date for personalized pieces.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">03</span>
+        <h3 data-en="Printed & delivered" data-ar="بتتطبع وتوصلك">Printed & delivered</h3>
+        <p data-en="Ready in a few days, delivered anywhere in Egypt." data-ar="بتكون جاهزة خلال كام يوم، وتوصلك في أي مكان في مصر.">Ready in a few days, delivered anywhere in Egypt.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="foot-col">
+        <div class="wordmark" style="margin-bottom:10px;"><span class="dot"></span><span data-en="The 3D Wonder" data-ar="ذا ثري دي واندر">The 3D Wonder</span></div>
+        <p data-en="Cairo, Egypt · delivering all over Egypt" data-ar="القاهرة، مصر · التوصيل لكل محافظات مصر">Cairo, Egypt · delivering all over Egypt</p>
+      </div>
+      <div class="foot-col">
+        <h4 data-en="Contact" data-ar="تواصل">Contact</h4>
+        <a href="#" id="tiktokBtnFoot" target="_blank" rel="noopener" data-en="TikTok" data-ar="تيك توك">TikTok</a>
+        <a href="#" id="whatsappBtnFoot" target="_blank" rel="noopener" data-en="WhatsApp" data-ar="واتساب">WhatsApp</a>
+      </div>
+    </div>
+    <div class="bottom-line">
+      <span data-en="© 2026 The 3D Wonder — prices in EGP, subject to change." data-ar="© ٢٠٢٦ ذا ثري دي واندر — الأسعار بالجنيه المصري وقابلة للتغيير.">© 2026 The 3D Wonder — prices in EGP, subject to change.</span>
+    </div>
+  </div>
+</footer>
+
+<!-- modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle" data-en="Add product" data-ar="إضافة منتج">Add product</h3>
+    <div class="field">
+      <label data-en="Name (English)" data-ar="الاسم (إنجليزي)">Name (English)</label>
+      <input type="text" id="f-en" placeholder="e.g. Articulated Dragon">
+    </div>
+    <div class="field">
+      <label data-en="Name (Arabic)" data-ar="الاسم (عربي)">Name (Arabic)</label>
+      <input type="text" id="f-ar" placeholder="مثال: تنين متحرك" dir="rtl">
+    </div>
+    <div class="field">
+      <label data-en="Tag (English)" data-ar="التصنيف (إنجليزي)">Tag (English)</label>
+      <input type="text" id="f-tag-en" placeholder="e.g. New">
+    </div>
+    <div class="field">
+      <label data-en="Tag (Arabic)" data-ar="التصنيف (عربي)">Tag (Arabic)</label>
+      <input type="text" id="f-tag-ar" placeholder="مثال: جديد" dir="rtl">
+    </div>
+    <div class="field">
+      <label data-en="Product photo" data-ar="صورة المنتج">Product photo</label>
+      <div class="image-upload">
+        <span class="hint" data-en="Tap to upload a photo (optional)" data-ar="دوس لرفع صورة (اختياري)">Tap to upload a photo (optional)</span>
+        <input type="file" id="f-image" accept="image/*" onchange="handleImageUpload(event)">
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label data-en="Or paste an image link" data-ar="أو الصق لينك صورة">Or paste an image link</label>
+        <input type="text" id="f-image-url" placeholder="https://..." oninput="handleImageUrl(event)">
+      </div>
+      <div class="image-preview" id="imagePreview">
+        <img id="imagePreviewImg" src="">
+        <button type="button" class="remove-img" onclick="removeImage()">✕</button>
+      </div>
+      <div class="crop-controls" id="cropControls">
+        <label data-en="Zoom" data-ar="التكبير">Zoom</label>
+        <input type="range" id="f-zoom" min="100" max="250" value="100" oninput="updateFocus()">
+        <label data-en="Move image ↔" data-ar="تحريك الصورة ↔">Move image ↔</label>
+        <input type="range" id="f-focus-x" min="0" max="100" value="50" oninput="updateFocus()">
+        <label data-en="Move image ↕" data-ar="تحريك الصورة ↕">Move image ↕</label>
+        <input type="range" id="f-focus-y" min="0" max="100" value="50" oninput="updateFocus()">
+      </div>
+    </div>
+    <div class="field">
+      <label data-en="Price (EGP)" data-ar="السعر (جنيه)">Price (EGP)</label>
+      <input type="number" id="f-price" placeholder="150">
+    </div>
+    <div class="field">
+      <label data-en="Card color (used if no photo)" data-ar="لون الكارت (لو مفيش صورة)">Card color (used if no photo)</label>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()" data-en="Save" data-ar="حفظ">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- cart drawer -->
+<div class="overlay" id="cartOverlay">
+  <div class="modal wide">
+    <h3 data-en="Your cart" data-ar="سلتك">Your cart</h3>
+    <div id="cartItems"></div>
+    <div class="cart-total-row">
+      <span data-en="Total" data-ar="الإجمالي">Total</span>
+      <span id="cartTotal">0 <span data-en="EGP" data-ar="ج.م">EGP</span></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCart()" data-en="Keep browsing" data-ar="كمل تسوق">Keep browsing</button>
+      <button class="btn btn-primary" id="checkoutBtn" onclick="openCheckout()" data-en="Checkout" data-ar="إتمام الطلب">Checkout</button>
+    </div>
+  </div>
+</div>
+
+<!-- checkout form -->
+<div class="overlay" id="checkoutOverlay">
+  <div class="modal wide">
+    <h3 data-en="Complete your order" data-ar="بيانات الطلب">Complete your order</h3>
+    <div class="checkout-summary" id="checkoutSummary"></div>
+    <div class="field">
+      <label data-en="Full name" data-ar="الاسم بالكامل">Full name</label>
+      <input type="text" id="co-name" placeholder="">
+    </div>
+    <div class="field">
+      <label data-en="Address (we deliver all over Egypt)" data-ar="العنوان (بنوصل لكل مصر)">Address</label>
+      <input type="text" id="co-address" placeholder="">
+    </div>
+    <div class="field">
+      <label data-en="Mobile number" data-ar="رقم الموبايل">Mobile number</label>
+      <input type="tel" id="co-phone" placeholder="01xxxxxxxxx">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCheckout()" data-en="Back" data-ar="رجوع">Back</button>
+      <button class="btn btn-primary" onclick="submitCheckout()" data-en="Send order via WhatsApp" data-ar="إرسال الطلب على واتساب">Send order via WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- admin auth -->
+<div class="overlay" id="adminOverlay">
+  <div class="modal wide" id="adminModalBody">
+    <!-- filled dynamically by JS -->
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBj_hDlGo5yX8QcY2_8BoU-WKQwfLD4QiI",
+  authDomain: "the-3d-wonder.firebaseapp.com",
+  projectId: "the-3d-wonder",
+  storageBucket: "the-3d-wonder.firebasestorage.app",
+  messagingSenderId: "141717820066",
+  appId: "1:141717820066:web:1f666a9b5b6cd184d9bdfb",
+  measurementId: "G-7SH2Z1XN3H"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const WHATSAPP_NUMBER = "201555818114";
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
+const TIKTOK_LINK = "https://www.tiktok.com/@the3dwonder?_r=1&_t=ZS-98sUHmFGie2";
+document.getElementById('whatsappBtnHero').href = WHATSAPP_LINK;
+document.getElementById('whatsappBtnFoot').href = WHATSAPP_LINK;
+document.getElementById('tiktokBtnHero').href = TIKTOK_LINK;
+document.getElementById('tiktokBtnFoot').href = TIKTOK_LINK;
+
+const COLORS = ['#ff6a39','#00c2a8','#c893ff','#ffd166'];
+
+const DEFAULTS = {
+  trending: [
+    { en:"Articulated Dragon", ar:"تنين متحرك", tagEn:"Best seller", tagAr:"الأكثر مبيعًا", price:250, color:COLORS[0] },
+    { en:"Flexi Phone Stand", ar:"حامل موبايل مرن", tagEn:"New", tagAr:"جديد", price:120, color:COLORS[1] },
+    { en:"Geometric Planter", ar:"أصيص هندسي", tagEn:"Home", tagAr:"ديكور", price:180, color:COLORS[2] },
+    { en:"Desk Organizer Set", ar:"طقم تنظيم مكتب", tagEn:"Desk", tagAr:"مكتب", price:220, color:COLORS[3] },
+    { en:"Keychain Pack (3pc)", ar:"ميدالية مفاتيح (٣ قطع)", tagEn:"Gift", tagAr:"هدية", price:90, color:COLORS[0] },
+    { en:"Mini Robot Figure", ar:"مجسم روبوت صغير", tagEn:"Trending", tagAr:"ترند", price:150, color:COLORS[1] },
+  ],
+  dive: [
+    { en:"Personalized Dive Tag", ar:"تاج غوص باسمك", tagEn:"Custom", tagAr:"مخصص", price:100, color:COLORS[2] },
+    { en:"Boat Log Keychain", ar:"ميدالية دفتر الرحلة", tagEn:"Souvenir", tagAr:"تذكار", price:80, color:COLORS[3] },
+    { en:"Custom Name Fish Charm", ar:"سمكة باسمك", tagEn:"Custom", tagAr:"مخصص", price:110, color:COLORS[0] },
+  ]
+};
+
+let data = null;
+let currentLang = 'en';
+let editMode = false;
+let editUnlocked = false;
+let modalCtx = { section:null, index:null, color:COLORS[0], image:null, focusX:50, focusY:50, zoom:100 };
+
+// ---------- STORAGE (Firestore — shared across every visitor) ----------
+async function loadData(){
+  try{
+    const doc = await db.collection('config').doc('catalog').get();
+    data = doc.exists ? doc.data() : JSON.parse(JSON.stringify(DEFAULTS));
+  }catch(e){
+    data = JSON.parse(JSON.stringify(DEFAULTS));
+  }
+  renderAll();
+}
+
+async function saveData(){
+  try{
+    await db.collection('config').doc('catalog').set(data);
+  }catch(e){
+    showToast(currentLang==='ar' ? 'حصل خطأ في الحفظ — تأكد إنك عامل تسجيل دخول' : 'Save failed — make sure you are logged in');
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function renderAll(){
+  renderGrid('grid-trending', 'trending');
+  renderGrid('grid-dive', 'dive');
+  applyLang();
+}
+
+function renderGrid(containerId, section){
+  const el = document.getElementById(containerId);
+  const items = data[section];
+  el.innerHTML = items.map((p,i)=>`
+    <div class="card ${editMode?'editing':''}" data-section="${section}" data-index="${i}">
+      <div class="card-edit-controls">
+        <button class="icon-btn" onclick="editProduct('${section}', ${i})" title="Edit">✎</button>
+        <button class="icon-btn danger" onclick="deleteProduct('${section}', ${i})" title="Delete">✕</button>
+      </div>
+      <div class="card-art layered">
+        ${p.image ? `<img src="${p.image}" alt="" style="object-position:${p.focusX??50}% ${p.focusY??50}%; transform:scale(${(p.zoom??100)/100})">` : `<div class="poly" style="background:${p.color || COLORS[i % COLORS.length]}"></div>`}
+      </div>
+      <div class="card-body">
+        <span class="card-tag" data-en="${escapeHtml(p.tagEn||'')}" data-ar="${escapeHtml(p.tagAr||'')}">${escapeHtml(currentLang==='ar'?(p.tagAr||''):(p.tagEn||''))}</span>
+        <div class="card-title" data-en="${escapeHtml(p.en)}" data-ar="${escapeHtml(p.ar)}">${escapeHtml(currentLang==='ar'?p.ar:p.en)}</div>
+        <div class="card-row">
+          <span class="card-price">${p.price} <span data-en="EGP" data-ar="ج.م">${currentLang==='ar'?'ج.م':'EGP'}</span></span>
+        </div>
+        <button class="card-order" onclick="addToCart('${section}', ${i})" data-en="+ Add to cart" data-ar="+ ضيف للسلة">${currentLang==='ar'?'+ ضيف للسلة':'+ Add to cart'}</button>
+      </div>
+    </div>
+  `).join('') + `<button class="add-card ${editMode?'show':''}" onclick="addProduct('${section}')">
+      <span class="plus">+</span>
+      <span data-en="Add product" data-ar="إضافة منتج">${currentLang==='ar'?'إضافة منتج':'Add product'}</span>
+    </button>`;
+
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); } });
+  },{ threshold:0.1 });
+  el.querySelectorAll('.card').forEach(c=>{ c.classList.add('in'); io.observe(c); });
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ---------- CRYPTO: TOTP (Google Authenticator) ----------
+function base32Decode(base32){
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = '';
+  for(const ch of base32.replace(/=+$/,'').toUpperCase()){
+    const val = alphabet.indexOf(ch);
+    if(val === -1) continue;
+    bits += val.toString(2).padStart(5,'0');
+  }
+  const bytes = [];
+  for(let i=0;i+8<=bits.length;i+=8){ bytes.push(parseInt(bits.substr(i,8),2)); }
+  return new Uint8Array(bytes);
+}
+
+function generateBase32Secret(len=16){
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const rand = new Uint8Array(len);
+  crypto.getRandomValues(rand);
+  let secret = '';
+  for(let i=0;i<len;i++){ secret += alphabet[rand[i] % 32]; }
+  return secret;
+}
+
+async function totpCodeAt(base32secret, offsetSteps){
+  const key = base32Decode(base32secret);
+  const counter = Math.floor(Date.now()/1000/30) + offsetSteps;
+  const buf = new ArrayBuffer(8);
+  const view = new DataView(buf);
+  view.setUint32(4, counter);
+  const cryptoKey = await crypto.subtle.importKey('raw', key, {name:'HMAC', hash:'SHA-1'}, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, buf));
+  const offset = sig[sig.length-1] & 0xf;
+  const binCode = ((sig[offset] & 0x7f) << 24) | ((sig[offset+1] & 0xff) << 16) | ((sig[offset+2] & 0xff) << 8) | (sig[offset+3] & 0xff);
+  return (binCode % 1000000).toString().padStart(6,'0');
+}
+
+async function verifyTotp(base32secret, inputCode){
+  const clean = (inputCode||'').replace(/\s/g,'');
+  for(const offset of [0,-1,1]){
+    if(await totpCodeAt(base32secret, offset) === clean) return true;
+  }
+  return false;
+}
+
+// ---------- ADMIN AUTH FLOW (Firebase Auth + Firestore-backed 2FA) ----------
+function showEditButtonIfAdminUrl(){
+  if(location.hash.includes('admin')){
+    document.getElementById('editToggle').style.display = '';
+  }
+}
+
+function openAdminModal(){ document.getElementById('adminOverlay').classList.add('show'); }
+function closeAdminModal(){ document.getElementById('adminOverlay').classList.remove('show'); }
+
+async function toggleEdit(){
+  if(editMode){
+    editMode = false;
+    applyEditModeUI();
+    return;
+  }
+  if(editUnlocked){
+    editMode = true;
+    applyEditModeUI();
+    return;
+  }
+  renderAdminEmailStep();
+  openAdminModal();
+}
+
+function applyEditModeUI(){
+  document.getElementById('editToggle').classList.toggle('active', editMode);
+  document.getElementById('banner-trending').classList.toggle('show', editMode);
+  document.getElementById('banner-dive').classList.toggle('show', editMode);
+  renderAll();
+  showToast(editMode
+    ? (currentLang==='ar' ? 'وضع التعديل اتفعل' : 'Edit mode on')
+    : (currentLang==='ar' ? 'وضع التعديل اتقفل' : 'Edit mode off'));
+}
+
+function renderAdminEmailStep(){
+  const isAr = currentLang==='ar';
+  document.getElementById('adminModalBody').innerHTML = `
+    <h3>${isAr ? 'دخول الأدمن' : 'Admin login'}</h3>
+    <div class="field">
+      <label>${isAr ? 'الإيميل' : 'Email'}</label>
+      <input type="email" id="login-email" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>${isAr ? 'الباسورد' : 'Password'}</label>
+      <input type="password" id="login-pass" autocomplete="current-password">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAdminModal()">${isAr ? 'إلغاء' : 'Cancel'}</button>
+      <button class="btn btn-primary" id="login-confirm-btn">${isAr ? 'دخول' : 'Login'}</button>
+    </div>
+  `;
+  document.getElementById('login-confirm-btn').onclick = submitAdminEmailStep;
+}
+
+async function submitAdminEmailStep(){
+  const isAr = currentLang==='ar';
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+  }catch(e){
+    showToast(isAr ? 'الإيميل أو الباسورد غلط' : 'Wrong email or password');
+    return;
+  }
+
+  let adminDoc;
+  try{
+    adminDoc = await db.collection('config').doc('admin').get();
+  }catch(e){
+    showToast(isAr ? 'حصل خطأ في الاتصال' : 'Connection error');
+    return;
+  }
+
+  if(!adminDoc.exists || !adminDoc.data().totpSecret){
+    renderAdminSetupTotp();
+  } else {
+    renderAdminTotpStep(adminDoc.data().totpSecret);
+  }
+}
+
+function renderAdminSetupTotp(){
+  const isAr = currentLang==='ar';
+  const secret = generateBase32Secret();
+  const otpauth = `otpauth://totp/The3DWonder:admin?secret=${secret}&issuer=The3DWonder`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(otpauth)}`;
+
+  document.getElementById('adminModalBody').innerHTML = `
+    <h3>${isAr ? 'إعداد التحقق بخطوتين' : 'Set up 2FA'}</h3>
+    <div class="admin-note">${isAr
+      ? 'اتسجلت دخولك بنجاح. اعمل سكان للكود ده بتطبيق Google Authenticator عشان تفعّل التحقق بخطوتين.'
+      : 'You are signed in. Scan this code with Google Authenticator to enable 2FA.'}</div>
+    <div class="admin-qr"><img src="${qrUrl}" alt="QR code" width="220" height="220"></div>
+    <div class="admin-secret">${secret}</div>
+    <div class="field">
+      <label>${isAr ? 'اكتب الكود اللي ظهر في التطبيق للتأكيد' : 'Enter the code shown in the app to confirm'}</label>
+      <input type="text" id="setup-code" inputmode="numeric" placeholder="123456">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAdminModal()">${isAr ? 'إلغاء' : 'Cancel'}</button>
+      <button class="btn btn-primary" id="setup-confirm-btn">${isAr ? 'تفعيل' : 'Activate'}</button>
+    </div>
+  `;
+  document.getElementById('setup-confirm-btn').onclick = () => finishTotpSetup(secret);
+}
+
+async function finishTotpSetup(secret){
+  const isAr = currentLang==='ar';
+  const code = document.getElementById('setup-code').value;
+
+  const valid = await verifyTotp(secret, code);
+  if(!valid){
+    showToast(isAr ? 'كود التطبيق غلط، جرب تاني' : 'Authenticator code is wrong, try again');
+    return;
+  }
+
+  try{
+    await db.collection('config').doc('admin').set({ totpSecret: secret });
+  }catch(e){
+    showToast(isAr ? 'حصل خطأ في الحفظ' : 'Save failed');
+    return;
+  }
+
+  editUnlocked = true;
+  editMode = true;
+  closeAdminModal();
+  applyEditModeUI();
+  showToast(isAr ? 'اتفعل التحقق بخطوتين بنجاح' : '2FA activated successfully');
+}
+
+function renderAdminTotpStep(secret){
+  const isAr = currentLang==='ar';
+  document.getElementById('adminModalBody').innerHTML = `
+    <h3>${isAr ? 'كود التحقق' : 'Verification code'}</h3>
+    <div class="field">
+      <label>${isAr ? 'كود Google Authenticator' : 'Google Authenticator code'}</label>
+      <input type="text" id="totp-code" inputmode="numeric" placeholder="123456">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeAdminModal()">${isAr ? 'إلغاء' : 'Cancel'}</button>
+      <button class="btn btn-primary" id="totp-confirm-btn">${isAr ? 'دخول' : 'Login'}</button>
+    </div>
+  `;
+  document.getElementById('totp-confirm-btn').onclick = () => submitAdminTotpStep(secret);
+}
+
+async function submitAdminTotpStep(secret){
+  const isAr = currentLang==='ar';
+  const code = document.getElementById('totp-code').value;
+  const valid = await verifyTotp(secret, code);
+  if(!valid){
+    showToast(isAr ? 'كود التطبيق غلط' : 'Wrong authenticator code');
+    return;
+  }
+  editUnlocked = true;
+  editMode = true;
+  closeAdminModal();
+  applyEditModeUI();
+}
+
+
+
+function addProduct(section){
+  modalCtx = { section, index:null, color:COLORS[Math.floor(Math.random()*COLORS.length)], image:null, focusX:50, focusY:50, zoom:100 };
+  document.getElementById('modalTitle').textContent = currentLang==='ar' ? 'إضافة منتج' : 'Add product';
+  document.getElementById('f-en').value = '';
+  document.getElementById('f-ar').value = '';
+  document.getElementById('f-tag-en').value = '';
+  document.getElementById('f-tag-ar').value = '';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-image').value = ''; document.getElementById('f-image-url').value = modalCtx.image && !modalCtx.image.startsWith('data:') ? modalCtx.image : '';
+  updateImagePreview();
+  renderSwatches();
+  openModal();
+}
+
+function editProduct(section, index){
+  const p = data[section][index];
+  modalCtx = { section, index, color:p.color || COLORS[0], image:p.image || null, focusX:p.focusX??50, focusY:p.focusY??50, zoom:p.zoom??100 };
+  document.getElementById('modalTitle').textContent = currentLang==='ar' ? 'تعديل المنتج' : 'Edit product';
+  document.getElementById('f-en').value = p.en;
+  document.getElementById('f-ar').value = p.ar;
+  document.getElementById('f-tag-en').value = p.tagEn || '';
+  document.getElementById('f-tag-ar').value = p.tagAr || '';
+  document.getElementById('f-price').value = p.price;
+  document.getElementById('f-image').value = ''; document.getElementById('f-image-url').value = modalCtx.image && !modalCtx.image.startsWith('data:') ? modalCtx.image : '';
+  updateImagePreview();
+  renderSwatches();
+  openModal();
+}
+
+function updateImagePreview(){
+  const wrap = document.getElementById('imagePreview');
+  const img = document.getElementById('imagePreviewImg');
+  const crop = document.getElementById('cropControls');
+  if(modalCtx.image){
+    img.src = modalCtx.image;
+    img.style.objectPosition = `${modalCtx.focusX}% ${modalCtx.focusY}%`;
+    img.style.transform = `scale(${modalCtx.zoom/100})`;
+    wrap.classList.add('show');
+    crop.classList.add('show');
+    document.getElementById('f-focus-x').value = modalCtx.focusX;
+    document.getElementById('f-focus-y').value = modalCtx.focusY;
+    document.getElementById('f-zoom').value = modalCtx.zoom;
+  } else {
+    img.src = '';
+    img.style.transform = 'scale(1)';
+    wrap.classList.remove('show');
+    crop.classList.remove('show');
+  }
+}
+
+function updateFocus(){
+  modalCtx.focusX = parseInt(document.getElementById('f-focus-x').value, 10);
+  modalCtx.focusY = parseInt(document.getElementById('f-focus-y').value, 10);
+  modalCtx.zoom = parseInt(document.getElementById('f-zoom').value, 10);
+  const img = document.getElementById('imagePreviewImg');
+  img.style.objectPosition = `${modalCtx.focusX}% ${modalCtx.focusY}%`;
+  img.style.transform = `scale(${modalCtx.zoom/100})`;
+}
+
+function removeImage(){
+  modalCtx.image = null;
+  document.getElementById('f-image').value = ''; document.getElementById('f-image-url').value = modalCtx.image && !modalCtx.image.startsWith('data:') ? modalCtx.image : '';
+  updateImagePreview();
+}
+
+function handleImageUrl(event){
+  const url = event.target.value.trim();
+  if(url){
+    modalCtx.image = url;
+    modalCtx.focusX = 50; modalCtx.focusY = 50; modalCtx.zoom = 100;
+    updateImagePreview();
+  } else if(!document.getElementById('f-image').files.length){
+    modalCtx.image = null;
+    updateImagePreview();
+  }
+}
+
+function handleImageUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      // downscale to keep storage compact
+      const maxDim = 600;
+      let w = img.width, h = img.height;
+      if(w > h && w > maxDim){ h = Math.round(h * maxDim / w); w = maxDim; }
+      else if(h > maxDim){ w = Math.round(w * maxDim / h); h = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      modalCtx.image = canvas.toDataURL('image/jpeg', 0.8);
+      modalCtx.focusX = 50; modalCtx.focusY = 50; modalCtx.zoom = 100;
+      updateImagePreview();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderSwatches(){
+  const el = document.getElementById('swatches');
+  el.innerHTML = COLORS.map(c => `<div class="swatch ${c===modalCtx.color?'selected':''}" style="background:${c}" onclick="pickColor('${c}')"></div>`).join('');
+}
+function pickColor(c){ modalCtx.color = c; renderSwatches(); }
+
+function openModal(){ document.getElementById('overlay').classList.add('show'); }
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+
+async function saveProduct(){
+  const en = document.getElementById('f-en').value.trim();
+  const ar = document.getElementById('f-ar').value.trim();
+  const price = parseFloat(document.getElementById('f-price').value);
+  if(!en && !ar){ showToast(currentLang==='ar' ? 'اكتب اسم المنتج' : 'Enter a product name'); return; }
+  if(isNaN(price)){ showToast(currentLang==='ar' ? 'اكتب السعر' : 'Enter a price'); return; }
+
+  const product = {
+    en: en || ar, ar: ar || en,
+    tagEn: document.getElementById('f-tag-en').value.trim(),
+    tagAr: document.getElementById('f-tag-ar').value.trim(),
+    price, color: modalCtx.color, image: modalCtx.image,
+    focusX: modalCtx.focusX, focusY: modalCtx.focusY, zoom: modalCtx.zoom
+  };
+
+  if(modalCtx.index === null){
+    data[modalCtx.section].push(product);
+  } else {
+    data[modalCtx.section][modalCtx.index] = product;
+  }
+  await saveData();
+  closeModal();
+  renderAll();
+  showToast(currentLang==='ar' ? 'اتحفظ' : 'Saved');
+}
+
+async function deleteProduct(section, index){
+  const p = data[section][index];
+  const name = currentLang==='ar' ? p.ar : p.en;
+  const msg = currentLang==='ar' ? `تمسح "${name}"؟` : `Delete "${name}"?`;
+  if(!confirm(msg)) return;
+  data[section].splice(index,1);
+  await saveData();
+  renderAll();
+  showToast(currentLang==='ar' ? 'اتمسح' : 'Deleted');
+}
+
+// ---------- CART ----------
+let cart = [];
+
+function addToCart(section, index){
+  const p = data[section][index];
+  const existing = cart.find(ci => ci.section===section && ci.en===p.en);
+  if(existing){ existing.qty += 1; }
+  else { cart.push({ section, en:p.en, ar:p.ar, price:p.price, image:p.image||null, color:p.color, qty:1 }); }
+  updateCartCount();
+  showToast(currentLang==='ar' ? 'اتضاف للسلة' : 'Added to cart');
+}
+
+function updateCartCount(){
+  const count = cart.reduce((s,ci)=>s+ci.qty, 0);
+  document.getElementById('cartCount').textContent = count;
+}
+
+function cartTotal(){
+  return cart.reduce((s,ci)=>s + ci.price*ci.qty, 0);
+}
+
+function openCart(){
+  renderCart();
+  document.getElementById('cartOverlay').classList.add('show');
+}
+function closeCart(){ document.getElementById('cartOverlay').classList.remove('show'); }
+
+function renderCart(){
+  const el = document.getElementById('cartItems');
+  if(cart.length === 0){
+    el.innerHTML = `<div class="cart-empty" data-en="Your cart is empty" data-ar="السلة فاضية">${currentLang==='ar'?'السلة فاضية':'Your cart is empty'}</div>`;
+  } else {
+    el.innerHTML = cart.map((ci,i)=>`
+      <div class="cart-item">
+        ${ci.image ? `<img src="${ci.image}" alt="">` : `<div class="cart-thumb" style="background:${ci.color||'#333'}"></div>`}
+        <div class="ci-info">
+          <div class="ci-name">${escapeHtml(currentLang==='ar'?ci.ar:ci.en)}</div>
+          <div class="ci-price">${ci.price} ${currentLang==='ar'?'ج.م':'EGP'} × ${ci.qty} = ${ci.price*ci.qty} ${currentLang==='ar'?'ج.م':'EGP'}</div>
+        </div>
+        <div class="qty-stepper">
+          <button onclick="changeQty(${i}, -1)">−</button>
+          <span>${ci.qty}</span>
+          <button onclick="changeQty(${i}, 1)">+</button>
+        </div>
+        <button class="ci-remove" onclick="removeFromCart(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('cartTotal').innerHTML = `${cartTotal()} <span>${currentLang==='ar'?'ج.م':'EGP'}</span>`;
+  document.getElementById('checkoutBtn').style.display = cart.length ? 'flex' : 'none';
+}
+
+function changeQty(i, delta){
+  cart[i].qty += delta;
+  if(cart[i].qty <= 0){ cart.splice(i,1); }
+  updateCartCount();
+  renderCart();
+}
+function removeFromCart(i){
+  cart.splice(i,1);
+  updateCartCount();
+  renderCart();
+}
+
+// ---------- CHECKOUT ----------
+function openCheckout(){
+  if(cart.length === 0) return;
+  const summary = document.getElementById('checkoutSummary');
+  summary.innerHTML = cart.map(ci => `
+    <div class="line"><span>${escapeHtml(currentLang==='ar'?ci.ar:ci.en)} × ${ci.qty}</span><span>${ci.price*ci.qty} ${currentLang==='ar'?'ج.م':'EGP'}</span></div>
+  `).join('') + `<div class="line grand"><span>${currentLang==='ar'?'الإجمالي':'Total'}</span><span>${cartTotal()} ${currentLang==='ar'?'ج.م':'EGP'}</span></div>`;
+  closeCart();
+  document.getElementById('checkoutOverlay').classList.add('show');
+}
+function closeCheckout(){
+  document.getElementById('checkoutOverlay').classList.remove('show');
+}
+
+function submitCheckout(){
+  const name = document.getElementById('co-name').value.trim();
+  const address = document.getElementById('co-address').value.trim();
+  const phone = document.getElementById('co-phone').value.trim();
+  if(!name || !address || !phone){
+    showToast(currentLang==='ar' ? 'من فضلك املأ كل البيانات' : 'Please fill in all fields');
+    return;
+  }
+
+  const isAr = currentLang==='ar';
+  let msg = isAr ? 'طلب جديد من الموقع\n' : 'New order from the website\n';
+  msg += '------------------------\n';
+  cart.forEach(ci=>{
+    const nm = isAr ? ci.ar : ci.en;
+    msg += `${nm} × ${ci.qty} = ${ci.price*ci.qty} ${isAr?'ج.م':'EGP'}\n`;
+  });
+  msg += '------------------------\n';
+  msg += `${isAr?'الإجمالي':'Total'}: ${cartTotal()} ${isAr?'ج.م':'EGP'}\n\n`;
+  msg += `${isAr?'الاسم':'Name'}: ${name}\n`;
+  msg += `${isAr?'العنوان':'Address'}: ${address}\n`;
+  msg += `${isAr?'الموبايل':'Mobile'}: ${phone}`;
+
+  const url = `${WHATSAPP_LINK}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+
+  cart = [];
+  updateCartCount();
+  closeCheckout();
+  showToast(isAr ? 'اتبعت! هيكلمك على واتساب' : 'Sent! We\'ll message you on WhatsApp');
+}
+
+function applyLang(){
+  document.querySelectorAll('[data-en]').forEach(node=>{
+    node.textContent = currentLang === 'ar' ? node.getAttribute('data-ar') : node.getAttribute('data-en');
+  });
+}
+
+function setLang(lang){
+  currentLang = lang;
+  const html = document.documentElement;
+  html.lang = lang;
+  html.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.getElementById('btn-ar').classList.toggle('active', lang==='ar');
+  renderAll();
+}
+
+showEditButtonIfAdminUrl();
+loadData();
+</script>
+
+</body>
+</html>
