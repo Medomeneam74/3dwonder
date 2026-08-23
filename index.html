@@ -87,8 +87,15 @@
   .section-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:44px; gap:24px; flex-wrap:wrap; }
   .section-head h2{ font-size:clamp(26px,3.2vw,36px); font-weight:800; }
   .section-head p{ color:var(--muted); max-width:420px; font-size:15px; }
+  .category-tabs{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:28px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  .category-tabs::-webkit-scrollbar{ display:none; }
+  .cat-tab{ flex:none; padding:9px 16px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--muted); font-family:'Space Mono', monospace; font-size:12px; cursor:pointer; white-space:nowrap; }
+  .cat-tab.active{ background:var(--orange); color:#141417; border-color:var(--orange); font-weight:700; }
+  .manage-cat-btn{ border-style:dashed; color:var(--teal); border-color:var(--teal); }
+  .cat-row{ display:flex; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); }
+  .cat-row input{ flex:1; min-width:0; background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:8px 10px; color:var(--ink); font-size:13px; }
 
-  .grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:20px; }
+  .grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; }
   .card{ background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; opacity:0; transform:translateY(18px); transition:opacity .5s ease, transform .5s ease; position:relative; }
   .card.in{ opacity:1; transform:translateY(0); }
   .card-art{ height:230px; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--surface-2); }
@@ -168,9 +175,11 @@
     .print-visual{ max-width:340px; margin:0 auto; }
   }
   @media (max-width: 540px){
-    .grid{ grid-template-columns:1fr; }
     nav{ padding:14px 18px; }
     .hero{ padding:64px 18px 50px; }
+    .card-art{ height:150px; }
+    .card-body{ padding:12px 12px 14px; }
+    .card-title{ font-size:13px; }
   }
   @media (prefers-reduced-motion: reduce){ .nozzle{ animation:none !important; } .card{ transition:none !important; } }
 </style>
@@ -229,29 +238,17 @@
   </div>
 </section>
 
-<section id="trending">
+<section id="shop">
   <div class="wrap">
     <div class="section-head">
-      <h2 data-en="Trending prints" data-ar="الأكثر رواجًا">Trending prints</h2>
-      <p data-en="This week's picks — small batches, updated as new designs trend." data-ar="اختيارات الأسبوع ده — كميات محدودة، بتتحدث كل ما يظهر تصميم جديد ترند.">This week's picks — small batches, updated as new designs trend.</p>
+      <h2 data-en="Our prints" data-ar="منتجاتنا">Our prints</h2>
+      <p data-en="Browse by category — new pieces added often." data-ar="تصفح حسب التصنيف — قطع جديدة بتتضاف باستمرار.">Browse by category — new pieces added often.</p>
     </div>
-    <div class="edit-banner" id="banner-trending">
+    <div class="category-tabs" id="categoryTabs"></div>
+    <div class="edit-banner" id="banner-shop">
       <span data-en="✎ Edit mode on — tap the pencil to edit or ✕ to delete any card" data-ar="✎ وضع التعديل شغال — دوس على القلم عشان تعدل أو ✕ عشان تمسح أي كارت">Edit mode on</span>
     </div>
-    <div class="grid" id="grid-trending"></div>
-  </div>
-</section>
-
-<section id="dive">
-  <div class="wrap">
-    <div class="section-head">
-      <h2 data-en="Dive safari gifts" data-ar="هدايا رحلات الغوص">Dive safari gifts</h2>
-      <p data-en="Personalized keepsakes for Red Sea dive-boat trips — printed with names and dates." data-ar="هدايا شخصية لرحلات الغوص في البحر الأحمر — بتتطبع بالاسم والتاريخ.">Personalized keepsakes for Red Sea dive-boat trips — printed with names and dates.</p>
-    </div>
-    <div class="edit-banner" id="banner-dive">
-      <span data-en="✎ Edit mode on — tap the pencil to edit or ✕ to delete any card" data-ar="✎ وضع التعديل شغال — دوس على القلم عشان تعدل أو ✕ عشان تمسح أي كارت">Edit mode on</span>
-    </div>
-    <div class="grid" id="grid-dive"></div>
+    <div class="grid" id="grid-products"></div>
   </div>
 </section>
 
@@ -310,12 +307,8 @@
       <input type="text" id="f-ar" placeholder="مثال: تنين متحرك" dir="rtl">
     </div>
     <div class="field">
-      <label data-en="Tag (English)" data-ar="التصنيف (إنجليزي)">Tag (English)</label>
-      <input type="text" id="f-tag-en" placeholder="e.g. New">
-    </div>
-    <div class="field">
-      <label data-en="Tag (Arabic)" data-ar="التصنيف (عربي)">Tag (Arabic)</label>
-      <input type="text" id="f-tag-ar" placeholder="مثال: جديد" dir="rtl">
+      <label data-en="Category" data-ar="التصنيف">Category</label>
+      <select id="f-category"></select>
     </div>
     <div class="field">
       <label data-en="Product photo" data-ar="صورة المنتج">Product photo</label>
@@ -395,6 +388,23 @@
   </div>
 </div>
 
+<!-- category management -->
+<div class="overlay" id="categoryOverlay">
+  <div class="modal wide">
+    <h3 data-en="Manage categories" data-ar="إدارة الكاتيجوريز">Manage categories</h3>
+    <div id="categoryList"></div>
+    <div class="field" style="margin-top:16px;">
+      <label data-en="Add new category" data-ar="إضافة كاتيجوري جديدة">Add new category</label>
+      <input type="text" id="new-cat-en" placeholder="English name" style="margin-bottom:8px;">
+      <input type="text" id="new-cat-ar" placeholder="الاسم بالعربي" dir="rtl">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCategoryModal()" data-en="Close" data-ar="إغلاق">Close</button>
+      <button class="btn btn-primary" onclick="addCategoryFromForm()" data-en="+ Add category" data-ar="+ إضافة كاتيجوري">+ Add category</button>
+    </div>
+  </div>
+</div>
+
 <!-- admin auth -->
 <div class="overlay" id="adminOverlay">
   <div class="modal wide" id="adminModalBody">
@@ -431,19 +441,28 @@ document.getElementById('tiktokBtnFoot').href = TIKTOK_LINK;
 
 const COLORS = ['#ff6a39','#00c2a8','#c893ff','#ffd166'];
 
+const DEFAULT_CATEGORIES = [
+  { key:'best-seller', en:'Best Seller', ar:'الأكثر مبيعًا' },
+  { key:'pen-holder', en:'Pen Holder', ar:'حامل أقلام' },
+  { key:'controller-holder', en:'Controller Holder', ar:'حامل كنترول' },
+  { key:'accessories-holder', en:'Accessories Holder', ar:'حامل إكسسوارات' },
+  { key:'others', en:'Others', ar:'أخرى' },
+];
+let categories = [];
+let categoryMap = {};
+function rebuildCategoryMap(){ categoryMap = Object.fromEntries(categories.map(c=>[c.key,c])); }
+
 const DEFAULTS = {
-  trending: [
-    { en:"Articulated Dragon", ar:"تنين متحرك", tagEn:"Best seller", tagAr:"الأكثر مبيعًا", price:250, color:COLORS[0] },
-    { en:"Flexi Phone Stand", ar:"حامل موبايل مرن", tagEn:"New", tagAr:"جديد", price:120, color:COLORS[1] },
-    { en:"Geometric Planter", ar:"أصيص هندسي", tagEn:"Home", tagAr:"ديكور", price:180, color:COLORS[2] },
-    { en:"Desk Organizer Set", ar:"طقم تنظيم مكتب", tagEn:"Desk", tagAr:"مكتب", price:220, color:COLORS[3] },
-    { en:"Keychain Pack (3pc)", ar:"ميدالية مفاتيح (٣ قطع)", tagEn:"Gift", tagAr:"هدية", price:90, color:COLORS[0] },
-    { en:"Mini Robot Figure", ar:"مجسم روبوت صغير", tagEn:"Trending", tagAr:"ترند", price:150, color:COLORS[1] },
-  ],
-  dive: [
-    { en:"Personalized Dive Tag", ar:"تاج غوص باسمك", tagEn:"Custom", tagAr:"مخصص", price:100, color:COLORS[2] },
-    { en:"Boat Log Keychain", ar:"ميدالية دفتر الرحلة", tagEn:"Souvenir", tagAr:"تذكار", price:80, color:COLORS[3] },
-    { en:"Custom Name Fish Charm", ar:"سمكة باسمك", tagEn:"Custom", tagAr:"مخصص", price:110, color:COLORS[0] },
+  products: [
+    { id:'p1', en:"Articulated Dragon", ar:"تنين متحرك", category:'best-seller', price:250, color:COLORS[0] },
+    { id:'p2', en:"Flexi Phone Stand", ar:"حامل موبايل مرن", category:'accessories-holder', price:120, color:COLORS[1] },
+    { id:'p3', en:"Geometric Planter", ar:"أصيص هندسي", category:'others', price:180, color:COLORS[2] },
+    { id:'p4', en:"Desk Organizer Set", ar:"طقم تنظيم مكتب", category:'pen-holder', price:220, color:COLORS[3] },
+    { id:'p5', en:"Keychain Pack (3pc)", ar:"ميدالية مفاتيح (٣ قطع)", category:'accessories-holder', price:90, color:COLORS[0] },
+    { id:'p6', en:"Mini Robot Figure", ar:"مجسم روبوت صغير", category:'others', price:150, color:COLORS[1] },
+    { id:'p7', en:"Personalized Dive Tag", ar:"تاج غوص باسمك", category:'others', price:100, color:COLORS[2] },
+    { id:'p8', en:"Boat Log Keychain", ar:"ميدالية دفتر الرحلة", category:'others', price:80, color:COLORS[3] },
+    { id:'p9', en:"Custom Name Fish Charm", ar:"سمكة باسمك", category:'others', price:110, color:COLORS[0] },
   ]
 };
 
@@ -451,17 +470,35 @@ let data = null;
 let currentLang = 'en';
 let editMode = false;
 let editUnlocked = false;
-let modalCtx = { section:null, index:null, color:COLORS[0], image:null, focusX:50, focusY:50, zoom:100 };
+let activeCategory = 'all';
+let modalCtx = { id:null, category:'others', color:COLORS[0], image:null, focusX:50, focusY:50, zoom:100 };
 
 // ---------- STORAGE (Firestore — shared across every visitor) ----------
 async function loadData(){
   try{
-    const doc = await db.collection('config').doc('catalog').get();
-    data = doc.exists ? doc.data() : JSON.parse(JSON.stringify(DEFAULTS));
+    const [catalogDoc, categoriesDoc] = await Promise.all([
+      db.collection('config').doc('catalog').get(),
+      db.collection('config').doc('categories').get()
+    ]);
+    const d = catalogDoc.exists ? catalogDoc.data() : null;
+    data = (d && Array.isArray(d.products)) ? d : JSON.parse(JSON.stringify(DEFAULTS));
+
+    const cd = categoriesDoc.exists ? categoriesDoc.data() : null;
+    categories = (cd && Array.isArray(cd.list) && cd.list.length) ? cd.list : JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   }catch(e){
     data = JSON.parse(JSON.stringify(DEFAULTS));
+    categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   }
+  rebuildCategoryMap();
   renderAll();
+}
+
+async function saveCategories(){
+  try{
+    await db.collection('config').doc('categories').set({ list: categories });
+  }catch(e){
+    showToast(currentLang==='ar' ? 'حصل خطأ في حفظ الكاتيجوريز' : 'Failed to save categories');
+  }
 }
 
 async function saveData(){
@@ -480,35 +517,51 @@ function showToast(msg){
 }
 
 function renderAll(){
-  renderGrid('grid-trending', 'trending');
-  renderGrid('grid-dive', 'dive');
+  renderCategoryTabs();
+  renderProductGrid();
   applyLang();
 }
 
-function renderGrid(containerId, section){
-  const el = document.getElementById(containerId);
-  const items = data[section];
-  el.innerHTML = items.map((p,i)=>`
-    <div class="card ${editMode?'editing':''}" data-section="${section}" data-index="${i}">
+function renderCategoryTabs(){
+  const el = document.getElementById('categoryTabs');
+  const tabs = [{key:'all', en:'All', ar:'الكل'}, ...categories];
+  el.innerHTML = tabs.map(t => `
+    <button class="cat-tab ${activeCategory===t.key?'active':''}" onclick="selectCategory('${t.key}')">${escapeHtml(currentLang==='ar'?t.ar:t.en)}</button>
+  `).join('') + (editMode ? `<button class="cat-tab manage-cat-btn" onclick="openCategoryModal()">${currentLang==='ar'?'✎ إدارة الكاتيجوريز':'✎ Manage categories'}</button>` : '');
+}
+
+function selectCategory(key){
+  activeCategory = key;
+  renderAll();
+}
+
+function renderProductGrid(){
+  const el = document.getElementById('grid-products');
+  const items = data.products.filter(p => activeCategory==='all' || p.category===activeCategory);
+  el.innerHTML = items.map((p)=>{
+    const cat = categoryMap[p.category] || categories[0] || {en:'', ar:''};
+    return `
+    <div class="card ${editMode?'editing':''}" data-id="${p.id}">
       <div class="card-edit-controls">
-        <button class="icon-btn" onclick="editProduct('${section}', ${i})" title="Edit">✎</button>
-        <button class="icon-btn danger" onclick="deleteProduct('${section}', ${i})" title="Delete">✕</button>
+        <button class="icon-btn" onclick="editProduct('${p.id}')" title="Edit">✎</button>
+        <button class="icon-btn danger" onclick="deleteProduct('${p.id}')" title="Delete">✕</button>
       </div>
       <div class="card-art layered">
-        ${p.image ? `<img src="${p.image}" alt="" style="object-position:${p.focusX??50}% ${p.focusY??50}%; transform:scale(${(p.zoom??100)/100})">` : `<div class="poly" style="background:${p.color || COLORS[i % COLORS.length]}"></div>`}
+        ${p.image ? `<img src="${p.image}" alt="" style="object-position:${p.focusX??50}% ${p.focusY??50}%; transform:scale(${(p.zoom??100)/100})">` : `<div class="poly" style="background:${p.color || COLORS[0]}"></div>`}
       </div>
       <div class="card-body">
-        <span class="card-tag" data-en="${escapeHtml(p.tagEn||'')}" data-ar="${escapeHtml(p.tagAr||'')}">${escapeHtml(currentLang==='ar'?(p.tagAr||''):(p.tagEn||''))}</span>
-        <div class="card-title" data-en="${escapeHtml(p.en)}" data-ar="${escapeHtml(p.ar)}">${escapeHtml(currentLang==='ar'?p.ar:p.en)}</div>
+        <span class="card-tag">${escapeHtml(currentLang==='ar'?cat.ar:cat.en)}</span>
+        <div class="card-title">${escapeHtml(currentLang==='ar'?p.ar:p.en)}</div>
         <div class="card-row">
-          <span class="card-price">${p.price} <span data-en="EGP" data-ar="ج.م">${currentLang==='ar'?'ج.م':'EGP'}</span></span>
+          <span class="card-price">${p.price} ${currentLang==='ar'?'ج.م':'EGP'}</span>
         </div>
-        <button class="card-order" onclick="addToCart('${section}', ${i})" data-en="+ Add to cart" data-ar="+ ضيف للسلة">${currentLang==='ar'?'+ ضيف للسلة':'+ Add to cart'}</button>
+        <button class="card-order" onclick="addToCart('${p.id}')">${currentLang==='ar'?'+ ضيف للسلة':'+ Add to cart'}</button>
       </div>
     </div>
-  `).join('') + `<button class="add-card ${editMode?'show':''}" onclick="addProduct('${section}')">
+  `;
+  }).join('') + `<button class="add-card ${editMode?'show':''}" onclick="addProduct()">
       <span class="plus">+</span>
-      <span data-en="Add product" data-ar="إضافة منتج">${currentLang==='ar'?'إضافة منتج':'Add product'}</span>
+      <span>${currentLang==='ar'?'إضافة منتج':'Add product'}</span>
     </button>`;
 
   const io = new IntersectionObserver((entries)=>{
@@ -592,8 +645,7 @@ async function toggleEdit(){
 
 function applyEditModeUI(){
   document.getElementById('editToggle').classList.toggle('active', editMode);
-  document.getElementById('banner-trending').classList.toggle('show', editMode);
-  document.getElementById('banner-dive').classList.toggle('show', editMode);
+  document.getElementById('banner-shop').classList.toggle('show', editMode);
   renderAll();
   showToast(editMode
     ? (currentLang==='ar' ? 'وضع التعديل اتفعل' : 'Edit mode on')
@@ -728,30 +780,127 @@ async function submitAdminTotpStep(secret){
 
 
 
-function addProduct(section){
-  modalCtx = { section, index:null, color:COLORS[Math.floor(Math.random()*COLORS.length)], image:null, focusX:50, focusY:50, zoom:100 };
+function renderCategoryOptions(selected){
+  const el = document.getElementById('f-category');
+  el.innerHTML = categories.map(c=>`<option value="${c.key}" ${c.key===selected?'selected':''}>${escapeHtml(currentLang==='ar'?c.ar:c.en)}</option>`).join('');
+}
+
+function slugify(text){
+  const base = text.toString().toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  return base || ('cat-' + Date.now().toString(36));
+}
+
+function openCategoryModal(){
+  renderCategoryList();
+  document.getElementById('categoryOverlay').classList.add('show');
+}
+function closeCategoryModal(){
+  document.getElementById('categoryOverlay').classList.remove('show');
+}
+
+function renderCategoryList(){
+  const el = document.getElementById('categoryList');
+  el.innerHTML = categories.map((c) => `
+    <div class="cat-row" data-key="${c.key}">
+      <input type="text" class="cat-en-input" value="${escapeHtml(c.en)}" placeholder="English">
+      <input type="text" class="cat-ar-input" value="${escapeHtml(c.ar)}" dir="rtl" placeholder="عربي">
+      <button class="icon-btn" onclick="saveCategoryRename('${c.key}')" title="Save">💾</button>
+      <button class="icon-btn danger" onclick="removeCategory('${c.key}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+async function saveCategoryRename(key){
+  const isAr = currentLang==='ar';
+  const row = document.querySelector(`.cat-row[data-key="${key}"]`);
+  const en = row.querySelector('.cat-en-input').value.trim();
+  const ar = row.querySelector('.cat-ar-input').value.trim();
+  if(!en && !ar){
+    showToast(isAr ? 'اكتب اسم الكاتيجوري' : 'Enter a category name');
+    return;
+  }
+  const cat = categories.find(c=>c.key===key);
+  if(!cat) return;
+  cat.en = en || ar;
+  cat.ar = ar || en;
+  rebuildCategoryMap();
+  await saveCategories();
+  renderAll();
+  showToast(isAr ? 'اتحفظ' : 'Saved');
+}
+
+async function removeCategory(key){
+  const isAr = currentLang==='ar';
+  if(categories.length <= 1){
+    showToast(isAr ? 'لازم يفضل كاتيجوري واحدة على الأقل' : 'At least one category must remain');
+    return;
+  }
+  const cat = categories.find(c=>c.key===key);
+  if(!cat) return;
+  const name = isAr ? cat.ar : cat.en;
+  const msg = isAr ? `تمسح "${name}"؟ المنتجات اللي جواها هتترحل لكاتيجوري تانية.` : `Delete "${name}"? Its products will move to another category.`;
+  if(!confirm(msg)) return;
+
+  categories = categories.filter(c=>c.key!==key);
+  const fallbackKey = categories[0].key;
+  data.products.forEach(p=>{ if(p.category===key) p.category = fallbackKey; });
+  rebuildCategoryMap();
+  if(activeCategory === key) activeCategory = 'all';
+
+  await saveCategories();
+  await saveData();
+  renderCategoryList();
+  renderAll();
+  showToast(isAr ? 'اتمسحت' : 'Deleted');
+}
+
+async function addCategoryFromForm(){
+  const isAr = currentLang==='ar';
+  const en = document.getElementById('new-cat-en').value.trim();
+  const ar = document.getElementById('new-cat-ar').value.trim();
+  if(!en && !ar){
+    showToast(isAr ? 'اكتب اسم الكاتيجوري' : 'Enter a category name');
+    return;
+  }
+  let key = slugify(en || ar);
+  let suffix = 2;
+  while(categories.some(c=>c.key===key)){ key = slugify(en||ar) + '-' + suffix; suffix++; }
+
+  categories.push({ key, en: en || ar, ar: ar || en });
+  rebuildCategoryMap();
+  await saveCategories();
+  document.getElementById('new-cat-en').value = '';
+  document.getElementById('new-cat-ar').value = '';
+  renderCategoryList();
+  renderAll();
+  showToast(isAr ? 'اتضافت' : 'Added');
+}
+
+function addProduct(){
+  modalCtx = { id:null, category:(activeCategory!=='all' ? activeCategory : 'others'), color:COLORS[Math.floor(Math.random()*COLORS.length)], image:null, focusX:50, focusY:50, zoom:100 };
   document.getElementById('modalTitle').textContent = currentLang==='ar' ? 'إضافة منتج' : 'Add product';
   document.getElementById('f-en').value = '';
   document.getElementById('f-ar').value = '';
-  document.getElementById('f-tag-en').value = '';
-  document.getElementById('f-tag-ar').value = '';
   document.getElementById('f-price').value = '';
-  document.getElementById('f-image').value = ''; document.getElementById('f-image-url').value = modalCtx.image && !modalCtx.image.startsWith('data:') ? modalCtx.image : '';
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-image-url').value = '';
+  renderCategoryOptions(modalCtx.category);
   updateImagePreview();
   renderSwatches();
   openModal();
 }
 
-function editProduct(section, index){
-  const p = data[section][index];
-  modalCtx = { section, index, color:p.color || COLORS[0], image:p.image || null, focusX:p.focusX??50, focusY:p.focusY??50, zoom:p.zoom??100 };
+function editProduct(id){
+  const p = data.products.find(x=>x.id===id);
+  if(!p) return;
+  modalCtx = { id, category:p.category || 'others', color:p.color || COLORS[0], image:p.image || null, focusX:p.focusX??50, focusY:p.focusY??50, zoom:p.zoom??100 };
   document.getElementById('modalTitle').textContent = currentLang==='ar' ? 'تعديل المنتج' : 'Edit product';
   document.getElementById('f-en').value = p.en;
   document.getElementById('f-ar').value = p.ar;
-  document.getElementById('f-tag-en').value = p.tagEn || '';
-  document.getElementById('f-tag-ar').value = p.tagAr || '';
   document.getElementById('f-price').value = p.price;
-  document.getElementById('f-image').value = ''; document.getElementById('f-image-url').value = modalCtx.image && !modalCtx.image.startsWith('data:') ? modalCtx.image : '';
+  document.getElementById('f-image').value = '';
+  document.getElementById('f-image-url').value = (p.image && !p.image.startsWith('data:')) ? p.image : '';
+  renderCategoryOptions(modalCtx.category);
   updateImagePreview();
   renderSwatches();
   openModal();
@@ -842,21 +991,22 @@ async function saveProduct(){
   const en = document.getElementById('f-en').value.trim();
   const ar = document.getElementById('f-ar').value.trim();
   const price = parseFloat(document.getElementById('f-price').value);
+  const category = document.getElementById('f-category').value;
   if(!en && !ar){ showToast(currentLang==='ar' ? 'اكتب اسم المنتج' : 'Enter a product name'); return; }
   if(isNaN(price)){ showToast(currentLang==='ar' ? 'اكتب السعر' : 'Enter a price'); return; }
 
   const product = {
+    id: modalCtx.id || ('p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7)),
     en: en || ar, ar: ar || en,
-    tagEn: document.getElementById('f-tag-en').value.trim(),
-    tagAr: document.getElementById('f-tag-ar').value.trim(),
-    price, color: modalCtx.color, image: modalCtx.image,
+    category, price, color: modalCtx.color, image: modalCtx.image,
     focusX: modalCtx.focusX, focusY: modalCtx.focusY, zoom: modalCtx.zoom
   };
 
-  if(modalCtx.index === null){
-    data[modalCtx.section].push(product);
+  if(modalCtx.id === null){
+    data.products.push(product);
   } else {
-    data[modalCtx.section][modalCtx.index] = product;
+    const idx = data.products.findIndex(x=>x.id===modalCtx.id);
+    if(idx > -1) data.products[idx] = product;
   }
   await saveData();
   closeModal();
@@ -864,12 +1014,13 @@ async function saveProduct(){
   showToast(currentLang==='ar' ? 'اتحفظ' : 'Saved');
 }
 
-async function deleteProduct(section, index){
-  const p = data[section][index];
+async function deleteProduct(id){
+  const p = data.products.find(x=>x.id===id);
+  if(!p) return;
   const name = currentLang==='ar' ? p.ar : p.en;
   const msg = currentLang==='ar' ? `تمسح "${name}"؟` : `Delete "${name}"?`;
   if(!confirm(msg)) return;
-  data[section].splice(index,1);
+  data.products = data.products.filter(x=>x.id!==id);
   await saveData();
   renderAll();
   showToast(currentLang==='ar' ? 'اتمسح' : 'Deleted');
@@ -878,11 +1029,12 @@ async function deleteProduct(section, index){
 // ---------- CART ----------
 let cart = [];
 
-function addToCart(section, index){
-  const p = data[section][index];
-  const existing = cart.find(ci => ci.section===section && ci.en===p.en);
+function addToCart(id){
+  const p = data.products.find(x=>x.id===id);
+  if(!p) return;
+  const existing = cart.find(ci => ci.id===id);
   if(existing){ existing.qty += 1; }
-  else { cart.push({ section, en:p.en, ar:p.ar, price:p.price, image:p.image||null, color:p.color, qty:1 }); }
+  else { cart.push({ id, en:p.en, ar:p.ar, price:p.price, image:p.image||null, color:p.color, qty:1 }); }
   updateCartCount();
   showToast(currentLang==='ar' ? 'اتضاف للسلة' : 'Added to cart');
 }
